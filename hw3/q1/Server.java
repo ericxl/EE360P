@@ -1,4 +1,3 @@
-import java.lang.reflect.Array;
 import java.util.*;
 import java.io.*;
 import java.net.*;
@@ -112,14 +111,30 @@ public class Server {
             while(true){
                 try{
                     String msg = reader.readUTF();
-                    System.out.println(msg);
 
                     Future<String> s = threadPool.submit(new ClientHandler(msg));
                     String output = s.get();
                     writer.writeUTF(output);
                     writer.flush();
-                } catch (Exception e) {
-
+                }
+                catch (IOException e) {
+                    try {
+                        reader.close();
+                    }
+                    catch(Exception ex){}
+                    try {
+                        writer.close();
+                    }
+                    catch(Exception ex){}
+                    try {
+                        s.close();
+                    }
+                    catch(Exception ex){}
+                    break;
+                }
+                catch (InterruptedException | ExecutionException e)
+                {
+                    e.printStackTrace();
                 }
 
             }
@@ -140,7 +155,7 @@ public class Server {
         @Override
         public void run() {
             while (true) {
-                byte[] buff = new byte[512];
+                byte[] buff = new byte[4096];
                 try {
                     DatagramPacket p = new DatagramPacket(buff, buff.length);
                     socket.receive(p);

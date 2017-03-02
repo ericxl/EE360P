@@ -27,9 +27,10 @@ public class Client {
             addr = InetAddress.getByName(hostAddress);
 
             Scanner sc = new Scanner(System.in);
+
+            tcpSocket = new Socket(addr, tcpPort);
             while (sc.hasNextLine()) {
                 udpSocket = new DatagramSocket();
-                tcpSocket = new Socket(addr, tcpPort);
 
                 String cmd = sc.nextLine();
                 String[] tokens = cmd.split(" ");
@@ -69,8 +70,8 @@ public class Client {
                 }
 
                 udpSocket.close();
-                tcpSocket.close();
             }
+            tcpSocket.close();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         } catch (SocketException e) {
@@ -84,7 +85,7 @@ public class Client {
         if (deliveryMethod.equals("U")) {
             DatagramPacket packet = new DatagramPacket(dataToSend.getBytes(), dataToSend.length(), addr, udpPort);
             udpSocket.send(packet);
-            byte[] receiveBuffer = new byte[512];
+            byte[] receiveBuffer = new byte[4096];
             DatagramPacket serverReply = new DatagramPacket(receiveBuffer, receiveBuffer.length);
             udpSocket.receive(serverReply);
             String response = new String(serverReply.getData(), "UTF-8");
@@ -96,7 +97,6 @@ public class Client {
             output.writeUTF(dataToSend);
             output.flush();
             System.out.println(input.readUTF());
-            input.close();
         }
     }
 }
