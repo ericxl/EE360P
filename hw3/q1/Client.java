@@ -7,7 +7,6 @@ public class Client {
         String hostAddress;
         int tcpPort;
         int udpPort;
-        DatagramSocket udpSocket;
         Socket tcpSocket;
         InetAddress addr;
         String deliveryMethod = "T";
@@ -30,17 +29,16 @@ public class Client {
 
             tcpSocket = new Socket(addr, tcpPort);
             while (sc.hasNextLine()) {
-                udpSocket = new DatagramSocket();
 
                 String cmd = sc.nextLine();
                 String[] tokens = cmd.split(" ");
 
-                if (tokens[0].equals("setmode")) {
+                if (tokens[0].equals("setmode") && (tokens.length == 2)) {
                     if (tokens[1].equals("U")) {
                         deliveryMethod = "U";
-                        System.out.println("Protocol is UDP");
+                        //System.out.println("Protocol is UDP");
                     } else if (tokens[1].equals("T")) {
-                        System.out.println("Protocol is TCP");
+                        //System.out.println("Protocol is TCP");
                     } else {
                         System.out.println("ERROR: Input must be either 'T' or 'U'");
                     }
@@ -50,26 +48,24 @@ public class Client {
                     String productName = tokens[2];
                     String quantity = tokens[3];
                     String dataToSend = purchase + " " + userName + " " + productName + " " + quantity;
-                    sendData(dataToSend, deliveryMethod, udpSocket, tcpSocket, addr, udpPort);
-                } else if (tokens[0].equals("cancel")) {
+                    sendData(dataToSend, deliveryMethod, tcpSocket, addr, udpPort);
+                } else if (tokens[0].equals("cancel") && (tokens.length == 2)) {
                     String cancel = tokens[0];
                     String orderId = tokens[1];
                     String dataToSend = cancel + " " + orderId;
-                    sendData(dataToSend, deliveryMethod, udpSocket, tcpSocket, addr, udpPort);
-                } else if (tokens[0].equals("search")) {
+                    sendData(dataToSend, deliveryMethod, tcpSocket, addr, udpPort);
+                } else if (tokens[0].equals("search")&& (tokens.length == 2)) {
                     String search = tokens[0];
                     String userName = tokens[1];
                     String dataToSend = search + " " + userName;
-                    sendData(dataToSend, deliveryMethod, udpSocket, tcpSocket, addr, udpPort);
-                } else if (tokens[0].equals("list")) {
+                    sendData(dataToSend, deliveryMethod, tcpSocket, addr, udpPort);
+                } else if (tokens[0].equals("list")&& (tokens.length == 1)) {
                     String list = tokens[0];
                     String dataToSend = list;
-                    sendData(dataToSend, deliveryMethod, udpSocket, tcpSocket, addr, udpPort);
+                    sendData(dataToSend, deliveryMethod, tcpSocket, addr, udpPort);
                 } else {
                     System.out.println("ERROR: No such command");
                 }
-
-                udpSocket.close();
             }
             tcpSocket.close();
         } catch (UnknownHostException e) {
@@ -81,8 +77,9 @@ public class Client {
         }
     }
 
-    private static void sendData(String dataToSend, String deliveryMethod, DatagramSocket udpSocket, Socket tcpSocket, InetAddress addr, int udpPort) throws IOException {
+    private static void sendData(String dataToSend, String deliveryMethod, Socket tcpSocket, InetAddress addr, int udpPort) throws IOException {
         if (deliveryMethod.equals("U")) {
+            DatagramSocket udpSocket = new DatagramSocket();
             DatagramPacket packet = new DatagramPacket(dataToSend.getBytes(), dataToSend.length(), addr, udpPort);
             udpSocket.send(packet);
             byte[] receiveBuffer = new byte[4096];
@@ -91,6 +88,7 @@ public class Client {
             String response = new String(serverReply.getData(), "UTF-8");
             response = response.trim();
             System.out.println(response);
+            udpSocket.close();
         } else {
             DataOutputStream output = new DataOutputStream(tcpSocket.getOutputStream());
             DataInputStream input = new DataInputStream(tcpSocket.getInputStream());
