@@ -1,3 +1,9 @@
+/*
+ * EID's of group members
+ * XL5432
+ * CSL735
+ */
+
 import java.util.*;
 import java.io.*;
 import java.net.*;
